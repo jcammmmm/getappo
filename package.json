@@ -1,0 +1,14 @@
+{
+  "name": "getapo",
+  "version": "1.0.0",
+  "description": "get an appointment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "selenium-webdriver": "^4.33.0"
+  }
+}
