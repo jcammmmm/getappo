@@ -1,7 +1,7 @@
 const {Builder, Browser, By} = require('selenium-webdriver');
 
-async function helloSelenium() {
-  let driver = await new Builder().forBrowser(Browser.CHROME).build();
+async function helloSelenium(driver) {
+  
 
   await driver.get('https://www.karlsruhe.de/stadt-rathaus/service-buergerinformation/terminvereinbarung');
   await driver.findElement(By.linkText('Termin Ausländerbehörde')).click();
@@ -23,27 +23,35 @@ async function helloSelenium() {
   const appoholder = await driver.findElement(By.xpath('//*[@id="appointment_holder"]'));
   // document.querySelector('//*[@id="appointment_holder"]');
   const appointments = await appoholder.findElements(By.css('a.smart-date'));
-
+  
   for (let a of appointments) {
     let date = await a.getAttribute('id');
     console.log(date);
   }
-
-  await driver.close();
 }
 
 
-function sleep() {
-  return new Promise(resolve => setTimeout(resolve, 300_000));
+function sleep(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
 }
 
-async function demo() {
+async function lookappo(tminSecs, tmaxSecs) {
+  
   while(true) {
-    console.log(new Date())
-    await helloSelenium();
-    await sleep();
-    console.log('Done');
+    let driver = await new Builder().forBrowser(Browser.CHROME).build();
+    try {
+      console.log(new Date())
+      await helloSelenium(driver);
+      let time = Math.floor(Math.random()*(tmaxSecs - tminSecs) + tminSecs)*1000;
+      await sleep(time);
+      console.log(time);
+    } catch ({ name, message }) {
+      console.log(name);
+      console.log(message);
+    }
+    console.log("closing browser...")
+    await driver.quit();
   }
 }
 
-demo();
+lookappo(70, 100);
