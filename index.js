@@ -1,14 +1,18 @@
 const {Builder, Browser, By} = require('selenium-webdriver');
+const Chrome = require('selenium-webdriver/chrome');
 
-async function helloSelenium(driver) {
-  
+async function getAppointmentDates(driver) {
+  console.log(new Date())
 
   await driver.get('https://www.karlsruhe.de/stadt-rathaus/service-buergerinformation/terminvereinbarung');
+  const cookieNotice = await driver.findElement(By.css('.cookie-notice'));
+  console.log("ok")
+  if (cookieNotice) {
+    await cookieNotice.findElement(By.css('button')).click();
+  }
+
   await driver.findElement(By.linkText('Termin Ausländerbehörde')).click();
-
   const browserTabs = await driver.getAllWindowHandles();
-  // assert.strictEqual(browserTabs.length, 2);
-
   await driver.switchTo().window(browserTabs[1]);
 
   // Abgabe biometrischer Daten nach Erhalt unserer Entscheidung
@@ -24,27 +28,38 @@ async function helloSelenium(driver) {
   // document.querySelector('//*[@id="appointment_holder"]');
   const appointments = await appoholder.findElements(By.css('a.smart-date'));
   
+  let dates = [];
   for (let a of appointments) {
     let date = await a.getAttribute('id');
-    console.log(date);
+    dates.push(date);
   }
+  return dates;
 }
 
 
-function sleep(time) {
+function sleep(tminSecs, tmaxSecs) {
+  let time = Math.floor(Math.random()*(tmaxSecs - tminSecs) + tminSecs)*1000;
+  console.log(time);
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
-async function lookappo(tminSecs, tmaxSecs) {
-  
+async function lookappo() {
   while(true) {
-    let driver = await new Builder().forBrowser(Browser.CHROME).build();
+    const options = new Chrome.Options();
+    options.addArguments('--headless=new');
+    options.addArguments('--window-size=1920,1080');
+    // https://stackoverflow.com/questions/66612934/some-websites-dont-fully-load-render-in-selenium-headless-mode
+    options.addArguments('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36');
+    
+    let driver = await new Builder()
+      .forBrowser(Browser.CHROME)
+      .setChromeOptions(options)
+      // .setChromeOptions(options)
+      .build();
     try {
-      console.log(new Date())
-      await helloSelenium(driver);
-      let time = Math.floor(Math.random()*(tmaxSecs - tminSecs) + tminSecs)*1000;
-      await sleep(time);
-      console.log(time);
+      let dates = await getAppointmentDates(driver);
+      console.log(dates);
+      await sleep(70, 100);
     } catch ({ name, message }) {
       console.log(name);
       console.log(message);
@@ -54,4 +69,4 @@ async function lookappo(tminSecs, tmaxSecs) {
   }
 }
 
-lookappo(70, 100);
+lookappo();
