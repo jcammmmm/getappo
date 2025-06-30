@@ -1,12 +1,15 @@
 const {Builder, Browser, By} = require('selenium-webdriver');
+const { exec } = require('child_process');
 const Chrome = require('selenium-webdriver/chrome');
+
+let NOTIF_SOUND_LOC = '~/Documents/aoe2relicsound.mp3';
 
 async function getAppointmentDates(driver) {
   console.log(new Date())
 
   await driver.get('https://www.karlsruhe.de/stadt-rathaus/service-buergerinformation/terminvereinbarung');
   const cookieNotice = await driver.findElement(By.css('.cookie-notice'));
-  console.log("ok")
+  console.log("page loaded.")
   if (cookieNotice) {
     await cookieNotice.findElement(By.css('button')).click();
   }
@@ -37,11 +40,37 @@ async function getAppointmentDates(driver) {
 }
 
 
-function sleep(tminSecs, tmaxSecs) {
-  let time = Math.floor(Math.random()*(tmaxSecs - tminSecs) + tminSecs)*1000;
-  console.log(time);
+function sleep(tminMins, tmaxMins) {
+  let convFactor = 1000*60;
+  tminMins *= convFactor;
+  tmaxMins *= convFactor;
+  let time = Math.floor(Math.random()*(tmaxMins - tminMins) + tminMins);
+  console.log(time/convFactor);
   return new Promise(resolve => setTimeout(resolve, time));
 }
+
+async function playNotificationSound() {
+  const command = 'ffplay -v 0 -nodisp -autoexit ' + NOTIF_SOUND_LOC;
+  await new Promise((resolve, reject) => {
+    exec(command);
+  })
+  return 0;
+}
+
+async function parseDates(dates, maxMonthNum) {
+  let found = false;
+  for (d of dates) {
+    console.log(d);
+    if (Number(d.split('-')[2]) <= maxMonthNum) {
+      found = true;
+    }
+  }
+  if (found) {
+    playNotificationSound();
+  }
+}
+
+
 
 async function lookappo() {
   while(true) {
@@ -54,12 +83,11 @@ async function lookappo() {
     let driver = await new Builder()
       .forBrowser(Browser.CHROME)
       .setChromeOptions(options)
-      // .setChromeOptions(options)
       .build();
     try {
       let dates = await getAppointmentDates(driver);
-      console.log(dates);
-      await sleep(70, 100);
+      parseDates(dates, 8);
+      await sleep(1, 2);
     } catch ({ name, message }) {
       console.log(name);
       console.log(message);
