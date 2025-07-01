@@ -60,10 +60,12 @@ async function playNotificationSound() {
 async function parseDates(dates, maxMonthNum) {
   let found = false;
   for (d of dates) {
-    console.log(d);
+    let emph = "";
     if (Number(d.split('-')[2]) <= maxMonthNum) {
       found = true;
+      emph = " <-----------------------------------------"
     }
+    console.log(d + emph);
   }
   if (found) {
     playNotificationSound();
@@ -75,10 +77,12 @@ async function parseDates(dates, maxMonthNum) {
 async function lookappo() {
   while(true) {
     const options = new Chrome.Options();
-    options.addArguments('--headless=new');
-    options.addArguments('--window-size=1920,1080');
-    // https://stackoverflow.com/questions/66612934/some-websites-dont-fully-load-render-in-selenium-headless-mode
-    options.addArguments('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36');
+    if (process.argv.length == 2) {
+      options.addArguments('--headless=new');
+      options.addArguments('--window-size=1920,1080');
+      // https://stackoverflow.com/questions/66612934/some-websites-dont-fully-load-render-in-selenium-headless-mode
+      options.addArguments('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36');
+    }
     
     let driver = await new Builder()
       .forBrowser(Browser.CHROME)
@@ -87,7 +91,7 @@ async function lookappo() {
     try {
       let dates = await getAppointmentDates(driver);
       parseDates(dates, 8);
-      await sleep(1, 2);
+      await sleep(0.5, 0.5);
     } catch ({ name, message }) {
       console.log(name);
       console.log(message);
@@ -97,4 +101,8 @@ async function lookappo() {
   }
 }
 
-lookappo();
+try {
+  lookappo();
+} catch (error) {
+  playNotificationSound(); 
+}
